@@ -1,0 +1,36 @@
+body {
+  font-family: Inter, sans-serif;
+}
+
+.glass-card {
+  background: rgba(20, 20, 20, 0.5);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.code-scroll {
+  overflow: hidden;
+  mask-image: linear-gradient(
+    to bottom,
+    transparent,
+    black 15%,
+    black 85%,
+    transparent
+  );
+}
+
+.code-scroll pre {
+  animation: scroll 35s linear infinite;
+  font-family: "JetBrains Mono", monospace;
+  line-height: 1.8;
+}
+
+@keyframes scroll {
+  from {
+    transform: translateY(0);
+  }
+
+  to {
+    transform: translateY(-50%);
+  }
+}
