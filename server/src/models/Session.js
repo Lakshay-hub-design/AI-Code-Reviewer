@@ -41,11 +41,10 @@ const sessionSchema = new mongoose.Schema(
 );
 
 // Auto-update lastEditedAt when code changes
-sessionSchema.pre('save', function (next) {
+sessionSchema.pre('save', function () {
   if (this.isModified('code')) {
     this.lastEditedAt = new Date();
   }
-  next();
 });
 
 const Session = mongoose.model('Session', sessionSchema);

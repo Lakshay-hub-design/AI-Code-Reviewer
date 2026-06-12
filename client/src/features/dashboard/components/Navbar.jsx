@@ -4,8 +4,11 @@ import {
   Search,
   Plus,
 } from "lucide-react";
+import { useState } from "react";
+import CreateSessionModal from "./CreateSessionModal";
 
 const Navbar = () => {
+  const [open, setOpen] = useState(false)
   return (
     <header className="h-18 border-b bg-[#0F0F11] border-zinc-800 flex items-center justify-between px-10">
       <div className="relative">
@@ -25,10 +28,16 @@ const Navbar = () => {
         <Bell size={20} />
         <Settings size={20} />
 
-        <button className="bg-violet-600 hover:bg-violet-500 px-5 py-2 rounded-xl flex items-center gap-2">
+        <button 
+          onClick={() => setOpen(true)}
+          className="bg-violet-600 hover:bg-violet-500 px-5 py-2 rounded-xl flex items-center gap-2">
           <Plus size={18} />
           New Session
         </button>
+        <CreateSessionModal 
+          isOpen={open}
+          onClose={() => setOpen(false)}
+        />
       </div>
     </header>
   );

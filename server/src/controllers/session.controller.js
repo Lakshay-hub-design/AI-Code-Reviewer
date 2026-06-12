@@ -5,8 +5,8 @@ export const getSessions = async (req, res) => {
         const sessions = await Session.find({
             $or: [{owner: req.user._id}, {members: req.user._id}]
         })
-        .populate('owner', 'username avtar displayName')
-        .populate('members', 'username avtar displayName')
+        .populate('owner', 'username avatar displayName')
+        .populate('members', 'username avatar displayName')
         .sort({ updatedAt: -1 });
 
         res.status(200).json({ 
@@ -40,7 +40,7 @@ export const createSession = async (req, res) => {
             message: 'session created succesfully',
             session
         })
-    } catch (error) {
+    } catch (err) {
         res.status(500).json({
             message: 'Failed to create session', 
             error: err.message

@@ -4,6 +4,6 @@ import sessionReducer from '../../features/session/sessionSlice'
 export const store = configureStore({
     reducer: {
         auth: authReducer,
-        sessions: sessionReducer
+        session: sessionReducer
     }
 })
