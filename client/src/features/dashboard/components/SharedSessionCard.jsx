@@ -6,7 +6,7 @@ import {
   Palette,
   Share2,
 } from "lucide-react";
-
+import { formatDistanceToNow } from "date-fns";
 const iconMap = {
   backend: {
     icon: Database,
@@ -40,9 +40,10 @@ const iconMap = {
 };
 
 export default function SharedSessionCard({ sharedSession }) {
-  const config = iconMap[sharedSession.type];
-
-  const Icon = config.icon;
+  const lastModified = formatDistanceToNow(
+    new Date(sharedSession.updatedAt),
+    { addSuffix: true }
+  );
 
   return (
     <div className="flex items-center justify-between rounded-2xl border border-zinc-800 bg-[#0B0B10] px-4 py-2 transition-all duration-300 hover:border-zinc-700">
@@ -51,9 +52,9 @@ export default function SharedSessionCard({ sharedSession }) {
       <div className="flex items-center gap-4">
         <div
           className="flex h-10 w-10 items-center justify-center rounded-full"
-          style={{ backgroundColor: config.bg }}
+          
         >
-          <Icon size={18} className={config.iconColor} />
+          
         </div>
 
         <div>
@@ -62,9 +63,9 @@ export default function SharedSessionCard({ sharedSession }) {
           </h3>
 
           <p className="text-sm text-zinc-400">
-            Owner: {sharedSession.owner}
+            Owner: {sharedSession.owner.displayName}
             <span className="mx-2">•</span>
-            Last modified {sharedSession.lastModified}
+            Last modified {lastModified}
           </p>
         </div>
       </div>
@@ -72,8 +73,8 @@ export default function SharedSessionCard({ sharedSession }) {
       {/* Right */}
       <div className="flex items-center gap-5">
         <img
-          src={sharedSession.avatar}
-          alt={sharedSession.owner}
+          src={sharedSession.owner.avatar}
+          alt={sharedSession.owner.displayName}
           className="h-8 w-8 rounded-full border border-zinc-700"
         />
 

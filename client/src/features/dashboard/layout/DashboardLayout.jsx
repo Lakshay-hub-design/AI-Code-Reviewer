@@ -11,7 +11,7 @@ const DashboardLayout = () => {
       <div className="flex-1 flex flex-col">
         <Navbar />
 
-        <main className="flex-1 px-8 py-6">
+        <main className="flex-1">
           <Outlet />
         </main>
 
