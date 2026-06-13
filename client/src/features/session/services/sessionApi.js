@@ -5,8 +5,20 @@ export const createSessionAPI = async (data) => {
   return response.data;
 };
 
-export const getSessionsAPI = async () => {
-  const response = await api.get("/session");
+export const getSessionsAPI = async ({
+  page=1,
+  limit=5,
+  search="",
+  visibility=""
+}) => {
+  const response = await api.get("/session",{
+    params: {
+      page,
+      limit,
+      search,
+      visibility
+    }
+  });
   return response.data;
 };
 

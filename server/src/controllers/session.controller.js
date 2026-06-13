@@ -2,16 +2,59 @@ import Session from '../models/Session.js';
 
 export const getSessions = async (req, res) => {
     try{
-        const sessions = await Session.find({
-            $or: [{owner: req.user._id}, {members: req.user._id}]
-        })
-        .populate('owner', 'username avatar displayName')
-        .populate('members', 'username avatar displayName')
-        .sort({ updatedAt: -1 });
+      const {
+        page = 1,
+        limit = 10,
+        search = "",
+        visibility,
+        sort = "recent",
+      } = req.query;
 
-        res.status(200).json({ 
+      const pageNumber = Number(page);
+      const limitNumber = Number(limit);
+
+      const query = {
+        $or: [
+          { owner: req.user._id },
+          { members: req.user._id}
+        ]
+      }
+
+      if(search){
+        query.title = { $regex: search, $options: "i"}
+      }
+
+      if (visibility === "public") {
+        query.isPublic = true;
+      }
+
+      if (visibility === "private") {
+        query.isPublic = false;
+      }
+
+      const sortOptions = {};
+
+      if (sort === "recent") {
+        sortOptions.updatedAt = -1;
+      }
+
+      const [ sessions, total ] = await Promise.all([
+        Session.find(query)
+          .populate("owner", "username avatar displayName")
+          .populate("members", "username avatar displayName")
+          .sort(sortOptions)
+          .skip((pageNumber - 1) * limitNumber)
+          .limit(Number(limitNumber)),
+
+        Session.countDocuments(query)
+      ])
+
+      res.status(200).json({ 
             message: 'sessions fetched',
-            sessions
+            sessions,
+            total,
+            page: Number(page),
+            totalPages: Math.ceil(total/limitNumber)
         });
     }catch(err){
         res.status(500).json({ message: 'Error fetching sessions', error: err.message });
