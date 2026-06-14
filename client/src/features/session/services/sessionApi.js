@@ -9,14 +9,16 @@ export const getSessionsAPI = async ({
   page=1,
   limit=5,
   search="",
-  visibility=""
+  visibility="",
+  sort="recent",
 }) => {
   const response = await api.get("/session",{
     params: {
       page,
       limit,
       search,
-      visibility
+      visibility,
+      sort
     }
   });
   return response.data;
@@ -36,3 +38,13 @@ export const deleteSessionAPI = async (id) => {
   const response = await api.delete(`/session/${id}`);
   return response.data;
 };
+
+export const previewSessionAPI = async (id) => {
+  const response = await api.get(`/session/preview/${id}`)
+  return response.data
+}
+
+export const joinSessionAPI = async (id) => {
+  const response = await api.post(`/session/${id}/join`)
+  return response.data
+}

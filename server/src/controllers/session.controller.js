@@ -91,6 +91,30 @@ export const createSession = async (req, res) => {
     }
 }
 
+export const previewSession = async (req, res) => {
+  try {
+    const session = await Session.findById(req.params.id)
+      .populate('owner', 'username avatar displayName')
+      .select('title language isPublic owner members createdAt');
+ 
+    if (!session) return res.status(404).json({ message: 'Session not found' });
+ 
+    res.status(200).json({
+      session: {
+        _id:         session._id,
+        title:       session.title,
+        language:    session.language,
+        isPublic:    session.isPublic,
+        owner:       session.owner,
+        memberCount: session.members.length,
+        createdAt:   session.createdAt,
+      }
+    });
+  } catch (err) {
+    res.status(500).json({ message: 'Failed to preview session', error: err.message });
+  }
+};
+
 export const getSession = async (req, res) => {
     try{
         const session = await Session.findById(req.params.id)
@@ -105,8 +129,19 @@ export const getSession = async (req, res) => {
         const isMember = session.members.some(
             (m) => m._id.toString() === req.user._id.toString()
         );
+
+        if (session.isPublic && !isMember) {
+          await Session.findByIdAndUpdate(session._id, {
+            $addToSet: { members: req.user._id }
+          });
+        }
+
         if (!session.isPublic && !isMember) {
-            return res.status(403).json({ message: 'Access denied' });
+            return res.status(403).json({ 
+              message: 'Access denied',
+              isPrivate: true,
+              owner: session.owner,
+            });
         }
 
         res.status(200).json({
@@ -179,7 +214,7 @@ export const joinSession = async (req, res) => {
       await session.save();
     }
  
-    res.status(200).json({ message: 'Joined session' });
+    res.status(200).json({ message: 'Joined session succesfully' });
   } catch (err) {
     res.status(500).json({ message: 'Failed to join session', error: err.message });
   }
