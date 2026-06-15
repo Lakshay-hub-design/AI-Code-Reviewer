@@ -9,16 +9,19 @@ import {
   previewSession,
 } from '../controllers/session.controller.js';
 import protect from '../middleware/auth.middleware.js';
+import { requestAccess } from '../controllers/accessRequest.controller.js';
 
 const router = Router();
 
 router.get('/preview/:id', previewSession)
 
-router.get('/', protect, getSessions);
-router.post('/', protect, createSession);
-router.get('/:id', protect, getSession);
-router.put('/:id', protect, updateSession);
-router.delete('/:id', protect, deleteSession);
-router.post('/:id/join', protect, joinSession);
+router.use(protect)
+
+router.get('/', getSessions);
+router.post('/', createSession);
+router.get('/:id', getSession);
+router.put('/:id', updateSession);
+router.delete('/:id', deleteSession);
+router.post('/:id/join', joinSession);
 
 export default router;

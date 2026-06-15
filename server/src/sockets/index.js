@@ -3,8 +3,10 @@ import { editorHandler } from "./editor.handler.js";
 import { cursorHandler } from "./cursor.handler.js";
 import { verifyToken } from "../utils/jwt.utils.js";
 
+let io
+
 export const initSocket = (httpServer) => {
-  const io = new Server(httpServer, {
+  io = new Server(httpServer, {
     cors: {
       origin: process.env.CLIENT_URL,
       credentials: true,
@@ -33,6 +35,8 @@ export const initSocket = (httpServer) => {
   io.on("connection", (socket) => {
     console.log(`🔌 Socket connected: ${socket.id} (user: ${socket.userId})`);
 
+    socket.join(`user:${socket.userId}`);
+
     editorHandler(io, socket);
     cursorHandler(io, socket);
 
@@ -43,3 +47,11 @@ export const initSocket = (httpServer) => {
 
   return io;
 };
+
+export const getIo = () => {
+  if (!io) {
+    throw new Error("Socket.io not initialized");
+  }
+
+  return io;
+}

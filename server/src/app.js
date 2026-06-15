@@ -9,6 +9,8 @@ import { notFound, errorHandler } from './middleware/error.middleware.js';
 
 import authRoutes from './routes/auth.routes.js'
 import sessionRoutes from './routes/session.routes.js'
+import accessRequestRoutes from './routes/accessRequest.routes.js'
+import notificationRoutes from './routes/notification.routes.js'
 
 import passport from 'passport';
 
@@ -28,6 +30,8 @@ app.use('/api', apiLimiter)
 
 app.use('/api/auth', authRoutes)
 app.use('/api/session', sessionRoutes)
+app.use('/api/access-request', accessRequestRoutes)
+app.use('/api/notifications', notificationRoutes)
 
 
 app.get('/api/health', (req, res) => {
