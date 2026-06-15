@@ -175,7 +175,15 @@ export const updateSession = async (req, res) => {
     if (code !== undefined) session.code     = code;
  
     await session.save();
-    res.status(200).json({ session });
+    const updatedSession = await Session.findById(
+      session._id
+    )
+    .populate("owner", "username avatar displayName")
+    .populate("members", "username avatar displayName");
+
+    res.status(200).json({
+      session: updatedSession
+    });
   } catch (err) {
     res.status(500).json({ message: 'Failed to update session', error: err.message });
   }

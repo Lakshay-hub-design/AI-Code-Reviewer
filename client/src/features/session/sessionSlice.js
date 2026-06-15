@@ -127,8 +127,16 @@ const sessionSlice = createSlice({
           state.createLoading = false;
           state.error = payload;
         })
+        .addCase(deleteSession.pending, (state) => {
+          state.deleteLoading = true
+        })
         .addCase(deleteSession.fulfilled, (state, { payload }) => {
+          state.deleteLoading = false
           state.list = state.list.filter((s) => s._id !== payload);
+        })
+        .addCase(deleteSession.rejected, (state, { payload }) => {
+          state.deleteLoading = false;
+          state.error = payload;
         })
         .addCase(updateSession.fulfilled, (state, { payload }) => {
           const index = state.list.findIndex((s) => s._id === payload._id);
