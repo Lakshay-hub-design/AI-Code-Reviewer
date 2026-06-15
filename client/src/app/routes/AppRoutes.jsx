@@ -1,16 +1,17 @@
 import { Route, Routes } from 'react-router-dom'
 import Login from '../../features/auth/pages/Login'
 import ProtectedRoute from '../../features/auth/components/ProtectedRoute'
-import DashboardLayout from '../../features/dashboard/layout/DashboardLayout'
 import DashboardHome from '../../features/dashboard/pages/DashboardHome'
-import Sessions from '../../features/dashboard/pages/Sessions'
-import SharedWithMe from '../../features/dashboard/pages/SharedWithMe'
+import Sessions from '../../features/session/pages/Sessions'
+import SharedWithMe from '../../features/sharedSessions/pages/SharedWithMe'
+import DashboardLayout from '../../layout/DashboardLayout'
+import JoinSession from '../../features/session/pages/JoinSession'
 
 const AppRoutes = () => {
   return (
     <Routes>
         <Route path='/login' element={<Login />} />
-
+        <Route path="/join/:id" element={<JoinSession />} />
         <Route path="/" element={
           <ProtectedRoute>
             <DashboardLayout />

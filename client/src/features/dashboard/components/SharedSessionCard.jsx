@@ -1,49 +1,17 @@
-import {
-  Database,
-  Layers3,
-  Code2,
-  BookOpen,
-  Palette,
-  Share2,
-} from "lucide-react";
+import { Share2 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
-const iconMap = {
-  backend: {
-    icon: Database,
-    iconColor: "text-violet-400",
-    bg: "#241A35",
-  },
-
-  frontend: {
-    icon: Layers3,
-    iconColor: "text-sky-400",
-    bg: "#13202D",
-  },
-
-  database: {
-    icon: Database,
-    iconColor: "text-green-400",
-    bg: "#13261D",
-  },
-
-  dsa: {
-    icon: BookOpen,
-    iconColor: "text-yellow-400",
-    bg: "#302615",
-  },
-
-  design: {
-    icon: Palette,
-    iconColor: "text-pink-400",
-    bg: "#2A1626",
-  },
-};
+import { languageConfig } from "../../../shared/utils/languageConfig";
 
 export default function SharedSessionCard({ sharedSession }) {
   const lastModified = formatDistanceToNow(
     new Date(sharedSession.updatedAt),
     { addSuffix: true }
   );
+  const config =
+  languageConfig[sharedSession.language] ||
+  languageConfig.javascript;
+
+  const Icon = config.icon;
 
   return (
     <div className="flex items-center justify-between rounded-2xl border border-zinc-800 bg-[#0B0B10] px-4 py-2 transition-all duration-300 hover:border-zinc-700">
@@ -51,10 +19,13 @@ export default function SharedSessionCard({ sharedSession }) {
       {/* Left */}
       <div className="flex items-center gap-4">
         <div
-          className="flex h-10 w-10 items-center justify-center rounded-full"
-          
+          className={`
+            flex h-10 w-10 items-center justify-center rounded-full
+            ${config.bg}
+            border ${config.border}
+          `}
         >
-          
+          <Icon size={18} className={config.color} />
         </div>
 
         <div>
