@@ -118,6 +118,11 @@ export const acceptRequest = async (req, res) => {
             notification,
         });
 
+        io.to(`user:${accessRequest.requester._id}`)
+            .emit("notification:new", {
+                notification,
+            });
+
         res.status(200).json({ message: 'Request accepted' })
     } catch (err) {
         res.status(500).json({ message: 'Failed to accept request', error: err.message })
@@ -154,11 +159,16 @@ export const declineRequest = async (req, res) => {
       },
     });
  
-    const io = getIO();
+    const io = getIo();
     io.to(`user:${accessRequest.requester._id}`).emit('access:declined', {
       sessionId:    accessRequest.session._id,
       sessionTitle: accessRequest.session.title,
     });
+
+    io.to(`user:${accessRequest.requester._id}`)
+        .emit("notification:new", {
+            notification,
+        });
  
     res.status(200).json({ message: 'Request declined' });
   } catch (err) {

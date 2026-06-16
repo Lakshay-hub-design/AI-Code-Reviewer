@@ -151,7 +151,16 @@ const sessionSlice = createSlice({
         })
         .addCase(previewSession.fulfilled, (state, { payload }) => {
           state.previewSession = payload;
-        });
+        })
+        .addCase(joinSession.pending, (state) => {
+          state.joinLoading = true;
+        })
+        .addCase(joinSession.fulfilled, (state) => {
+          state.joinLoading = false;
+        })
+        .addCase(joinSession.rejected, (state) => {
+          state.joinLoading = false;
+        })
     }
 })
 
