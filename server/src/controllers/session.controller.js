@@ -221,8 +221,12 @@ export const joinSession = async (req, res) => {
       session.members.push(req.user._id);
       await session.save();
     }
+
+    const updatedSession = await Session.findById(session._id)
+      .populate("owner", "username displayName avatar")
+      .populate("members", "username displayName avatar");
  
-    res.status(200).json({ message: 'Joined session succesfully' });
+    res.status(200).json({ message: 'Joined session succesfully', session: updatedSession });
   } catch (err) {
     res.status(500).json({ message: 'Failed to join session', error: err.message });
   }

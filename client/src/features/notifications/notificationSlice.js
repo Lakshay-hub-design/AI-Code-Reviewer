@@ -43,19 +43,16 @@ export const markAllNotificationsRead = createAsyncThunk(
   },
 );
 
-export const requestAccess =
-  createAsyncThunk(
-    "notifications/requestAccess",
-    async (sessionId, { rejectWithValue }) => {
-      try {
-        return await requestAccessAPI(sessionId);
-      } catch (err) {
-        return rejectWithValue(
-          err.response?.data?.message
-        );
-      }
+export const requestAccess = createAsyncThunk(
+  "notifications/requestAccess",
+  async (sessionId, { rejectWithValue }) => {
+    try {
+      return await requestAccessAPI(sessionId);
+    } catch (err) {
+      return rejectWithValue(err.response?.data?.message);
     }
-  );
+  },
+);
 
 export const acceptAccessRequest = createAsyncThunk(
   "notifications/acceptRequest",
@@ -98,8 +95,21 @@ const notificationSlice = createSlice({
 
   reducers: {
     addNotification: (state, action) => {
-      state.notifications.unshift(action.payload);
-      state.unreadCount += 1;
+      const notification = action.payload;
+
+      if (!notification?._id) return;
+
+      const exists = state.notifications.some(
+        (n) => n?._id === notification._id,
+      );
+
+      if (!exists) {
+        state.notifications.unshift(notification);
+
+        if (!notification.read) {
+          state.unreadCount += 1;
+        }
+      }
     },
     removeNotification: (state, action) => {
       state.notifications = state.notifications.filter(
@@ -135,9 +145,7 @@ const notificationSlice = createSlice({
           notification.read = true;
         });
 
-        if (state.unreadCount > 0) {
-          state.unreadCount -= 1;
-        }
+        state.unreadCount = 0;
       })
 
       .addCase(acceptAccessRequest.fulfilled, (state, { payload }) => {
@@ -145,13 +153,14 @@ const notificationSlice = createSlice({
           (n) => n.data?.accessRequestId === payload,
         );
 
-        if (notification && !notification.read) {
-          state.unreadCount -= 1;
-        }
+        if (notification) {
+          if (!notification.read && state.unreadCount > 0) {
+            state.unreadCount -= 1;
+          }
 
-        state.notifications = state.notifications.filter(
-          (n) => n.data?.accessRequestId !== payload,
-        );
+          notification.status = "approved";
+          notification.read = true;
+        }
       })
 
       .addCase(declineAccessRequest.fulfilled, (state, { payload }) => {
@@ -159,13 +168,14 @@ const notificationSlice = createSlice({
           (n) => n.data?.accessRequestId === payload,
         );
 
-        if (notification && !notification.read) {
-          state.unreadCount -= 1;
-        }
+        if (notification) {
+          if (!notification.read && state.unreadCount > 0) {
+            state.unreadCount -= 1;
+          }
 
-        state.notifications = state.notifications.filter(
-          (n) => n.data?.accessRequestId !== payload,
-        );
+          notification.status = "declined";
+          notification.read = true;
+        }
       });
   },
 });

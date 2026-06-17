@@ -7,6 +7,7 @@ import { addNotification } from "../../features/notifications/notificationSlice"
 
 import { toast } from "react-hot-toast";
 import { playNotificationSound } from "../utils/playNotificationSound";
+import { addSharedSession } from "../../features/session/sessionSlice";
 
 const SocketProvider = ({ children }) => {
   const dispatch = useDispatch();
@@ -31,14 +32,13 @@ const SocketProvider = ({ children }) => {
     });
 
     // Toasts
-    socket.on("access:approved", ({ sessionTitle, notification }) => {
-        dispatch(addNotification(notification))
+    socket.on("access:approved", ({ session }) => {
+      dispatch(addSharedSession(session))
         playNotificationSound()
-      toast.success(`Access granted to ${sessionTitle}`);
+      toast.success(`Access granted to ${session.title}`);
     });
 
-    socket.on("access:declined", ({ sessionTitle, notification }) => {
-        dispatch(addNotification(notification))
+    socket.on("access:declined", ({ sessionTitle }) => {
         playNotificationSound()
       toast.error(`Access denied for ${sessionTitle}`);
     });

@@ -1,14 +1,22 @@
 import {
-  Bell,
   Settings,
   Search,
   Plus,
 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import CreateSessionModal from "./CreateSessionModal";
+import NotificationBell from "../../features/notifications/components/NotificationBell";
+import { useDispatch } from "react-redux";
+import { fetchNotifications } from "../../features/notifications/notificationSlice";
 
 const Navbar = () => {
   const [open, setOpen] = useState(false)
+  const dispatch = useDispatch();
+
+  useEffect(() => {
+    dispatch(fetchNotifications());
+  }, [dispatch]);
+
   return (
     <header className="h-18 border-b bg-[#0F0F11] border-zinc-800 flex items-center justify-between px-10">
       <div className="relative">
@@ -25,7 +33,7 @@ const Navbar = () => {
       </div>
 
       <div className="flex items-center gap-5">
-        <Bell size={20} />
+        <NotificationBell />
         <Settings size={20} />
 
         <button 

@@ -12,6 +12,11 @@ const notificationSchema = new mongoose.Schema(
       enum: ['access_request', 'access_approved', 'access_declined'],
       required: true,
     },
+    status: {
+      type: String,
+      enum: ["pending", "approved", "declined"],
+      default: "pending",
+    },
     read: {
       type: Boolean,
       default: false,
