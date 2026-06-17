@@ -1,4 +1,4 @@
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import {
   Users,
   UserRound,
@@ -8,11 +8,26 @@ import {
 
 import StatsCard from "../../session/components/StatsCard";
 import SharedSessionCard from "../components/SharedSessionCard";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import JoinSessionModal from "../components/JoinSessionModal";
+import { fetchSessions } from "../../session/sessionSlice";
 
 const SharedWithMe = () => {
   const [showJoin, setShowJoin] = useState(false)
+  const dispatch = useDispatch();
+
+  useEffect(() => {
+    dispatch(
+      fetchSessions({
+        page: 1,
+        limit: 5,
+        search: "",
+        visibility: "",
+        sort: "recent",
+      })
+    );
+  }, [dispatch]);
+
   const sessions = useSelector(
     (state) => state.session.list
   );

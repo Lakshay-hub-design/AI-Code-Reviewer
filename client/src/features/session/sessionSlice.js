@@ -96,7 +96,18 @@ const sessionSlice = createSlice({
     reducers: {
         setCurrentSession: (state, action) => {
             state.currentSession = action.payload
-        }
+        },
+        addSharedSession: (state, action) => {
+          const session = action.payload;
+
+          const exists = state.list.some(
+            (s) => s._id === session._id
+          );
+
+          if (!exists) {
+            state.list.unshift(session);
+          }
+        },
     },
     extraReducers: (builder) => {
       builder
@@ -155,8 +166,16 @@ const sessionSlice = createSlice({
         .addCase(joinSession.pending, (state) => {
           state.joinLoading = true;
         })
-        .addCase(joinSession.fulfilled, (state) => {
+        .addCase(joinSession.fulfilled, (state, { payload }) => {
           state.joinLoading = false;
+
+          const exists = state.list.some(
+            (session) => session._id === payload._id
+          );
+
+          if (!exists) {
+            state.list.unshift(payload);
+          }
         })
         .addCase(joinSession.rejected, (state) => {
           state.joinLoading = false;
@@ -164,6 +183,6 @@ const sessionSlice = createSlice({
     }
 })
 
-export const { setCurrentSession } = sessionSlice.actions
+export const { setCurrentSession, addSharedSession } = sessionSlice.actions
 
 export default sessionSlice.reducer
