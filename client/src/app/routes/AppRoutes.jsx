@@ -6,6 +6,7 @@ import Sessions from '../../features/session/pages/Sessions'
 import SharedWithMe from '../../features/sharedSessions/pages/SharedWithMe'
 import DashboardLayout from '../../layout/DashboardLayout'
 import JoinSession from '../../features/session/pages/JoinSession'
+import EditorPage from '../../features/editor/pages/EditorPage'
 
 const AppRoutes = () => {
   return (
@@ -22,6 +23,8 @@ const AppRoutes = () => {
           <Route path="shared" element={<SharedWithMe />} />
           
         </Route>
+
+        <Route path='/editor/:id' element={<EditorPage />} />
     </Routes>
   )
 }

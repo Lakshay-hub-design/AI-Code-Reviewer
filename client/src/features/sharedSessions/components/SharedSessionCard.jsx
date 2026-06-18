@@ -6,11 +6,12 @@ import {
 
 import { formatDistanceToNow } from "date-fns";
 import { languageConfig } from "../../../shared/utils/languageConfig";
+import { useNavigate } from "react-router-dom";
 
 const SharedSessionCard = ({
   session,
 }) => {
-
+  const navigate = useNavigate()
   const config =
     languageConfig[
       session.language
@@ -126,6 +127,7 @@ const SharedSessionCard = ({
         </div>
 
         <button
+          onClick={() => navigate(`/editor/${session._id}`)}
           className="
             px-5 py-2
             rounded-xl
