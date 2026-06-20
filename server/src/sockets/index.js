@@ -2,6 +2,7 @@ import { Server } from "socket.io";
 import { editorHandler } from "./editor.handler.js";
 import { cursorHandler } from "./cursor.handler.js";
 import { verifyToken } from "../utils/jwt.utils.js";
+import { yjsHandler } from "./yjs.handler.js";
 
 let io
 
@@ -37,8 +38,8 @@ export const initSocket = (httpServer) => {
 
     socket.join(`user:${socket.userId}`);
 
+    yjsHandler(io, socket);
     editorHandler(io, socket);
-    cursorHandler(io, socket);
 
     socket.on("disconnect", (reason) => {
       console.log(`🔌 Socket disconnected: ${socket.id} — ${reason}`);
