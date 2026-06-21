@@ -1,10 +1,10 @@
 import { Server } from "socket.io";
 import { editorHandler } from "./editor.handler.js";
-import { cursorHandler } from "./cursor.handler.js";
 import { verifyToken } from "../utils/jwt.utils.js";
 import { yjsHandler } from "./yjs.handler.js";
+import { awarenessHandler } from "./awareness.handler.js";
 
-let io
+let io;
 
 export const initSocket = (httpServer) => {
   io = new Server(httpServer, {
@@ -40,6 +40,7 @@ export const initSocket = (httpServer) => {
 
     yjsHandler(io, socket);
     editorHandler(io, socket);
+    awarenessHandler(io, socket);
 
     socket.on("disconnect", (reason) => {
       console.log(`🔌 Socket disconnected: ${socket.id} — ${reason}`);
@@ -55,4 +56,4 @@ export const getIo = () => {
   }
 
   return io;
-}
+};

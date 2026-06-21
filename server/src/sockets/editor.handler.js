@@ -1,6 +1,6 @@
 import Session from "../models/Session.js";
 import * as Y from "yjs";
-import { getOrCreateDoc } from "./yjs-doc-manager.js";
+import { getDoc, getOrCreateDoc } from "./yjs-doc-manager.js";
 import { removeDoc } from "./yjs-doc-manager.js";
 import { saveNow } from "./yjs-persistence.js";
 
@@ -18,7 +18,9 @@ export const editorHandler = (io, socket) => {
       if (!docData.initialized) {
         const yText = ydoc.getText("content");
 
-        yText.insert(0, session.code || "");
+        if (yText.length === 0) {
+          yText.insert(0, session.code || "");
+        }
 
         docData.initialized = true;
       }
@@ -29,7 +31,7 @@ export const editorHandler = (io, socket) => {
 
       const state = Y.encodeStateAsUpdate(ydoc);
 
-      socket.emit("yjs-sync", state);
+      socket.emit("yjs-sync", Array.from(state));
 
       const sockets = await io.in(roomId).fetchSockets();
 
@@ -52,24 +54,44 @@ export const editorHandler = (io, socket) => {
 
     socket.leave(roomId);
 
-    const room = io.sockets.adapter.rooms.get(roomId);
+    // const room = io.sockets.adapter.rooms.get(roomId);
 
-    if (!room || room.size === 0) {
-      await saveNow(sessionId, docData.ydoc);
-      removeDoc(sessionId);
-    }
+    // const docData = getDoc(sessionId);
+
+    // if (!room || room.size === 0) {
+    //   if (docData) {
+    //     await saveNow(sessionId, docData.ydoc);
+    //     removeDoc(sessionId);
+    //   }
+    // }
 
     const sockets = await io.in(roomId).fetchSockets();
 
     const onlineUserIds = [...new Set(sockets.map((s) => s.userId))];
 
     io.to(roomId).emit("presence:update", onlineUserIds);
+
+    socket.to(`session:${sessionId}`).emit("cursor-remove", {
+      socketId: socket.id,
+    });
   });
 
   socket.on("disconnecting", async () => {
-    for (const room of socket.rooms) {
-      if (room !== socket.id && room.startsWith("session:")) {
-        const sockets = await io.in(room).fetchSockets();
+    for (const roomName of socket.rooms) {
+      if (roomName !== socket.id && roomName.startsWith("session:")) {
+        const sessionId = roomName.replace("session:", "");
+
+        const room = io.sockets.adapter.rooms.get(roomName);
+
+        if (room && room.size === 1) {
+          const docData = getOrCreateDoc(sessionId);
+
+          await saveNow(sessionId, docData.ydoc);
+
+          removeDoc(sessionId);
+        }
+
+        const sockets = await io.in(roomName).fetchSockets();
 
         const onlineUserIds = [
           ...new Set(
@@ -77,14 +99,7 @@ export const editorHandler = (io, socket) => {
           ),
         ];
 
-        const room = io.sockets.adapter.rooms.get(roomId);
-
-        if (!room || room.size === 0) {
-          await saveNow(sessionId, docData.ydoc);
-          removeDoc(sessionId);
-        }
-
-        io.to(room).emit("presence:update", onlineUserIds);
+        io.to(roomName).emit("presence:update", onlineUserIds);
       }
     }
   });

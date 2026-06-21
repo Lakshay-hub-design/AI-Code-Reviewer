@@ -70,7 +70,7 @@ export const joinSession = createAsyncThunk("session/join", async (id, { rejectW
 
 const initialState = {
   list: [],
-
+  onlineUsers: [],
   currentSession: null,
   previewSession: null,
 
@@ -108,6 +108,9 @@ const sessionSlice = createSlice({
             state.list.unshift(session);
           }
         },
+        setOnlineUsers: (state, action) => {
+  state.onlineUsers = action.payload;
+},
     },
     extraReducers: (builder) => {
       builder
@@ -183,6 +186,6 @@ const sessionSlice = createSlice({
     }
 })
 
-export const { setCurrentSession, addSharedSession } = sessionSlice.actions
+export const { setCurrentSession, addSharedSession, setOnlineUsers } = sessionSlice.actions
 
 export default sessionSlice.reducer

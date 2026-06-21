@@ -1,0 +1,11 @@
+.remote-cursor {
+  border-left: 2px solid red;
+}
+
+.remote-cursor-label {
+  position: relative;
+}
+
+.remote-cursor-label::after {
+  content: attr(data-user);
+}

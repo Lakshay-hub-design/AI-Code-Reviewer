@@ -5,8 +5,8 @@ import EditorWorkspace from "../components/EditorWorkspace";
 import RightPanel from "../components/RightPanel";
 import { useDispatch, useSelector } from "react-redux";
 import { useEffect } from "react";
-import { fetchSession, setOnlineUsers, setRemoteCursor } from "../../session/sessionSlice";
-import { connectSocket } from "../../../shared/socket/socket";
+import { fetchSession } from "../../session/sessionSlice";
+import { usePresence } from "../../../shared/socket/hooks/usePresence";
 
 const EditorPage = () => {
   const { id } = useParams();
@@ -23,51 +23,8 @@ const EditorPage = () => {
     }
   }, [dispatch, id]);
 
-  const socket = connectSocket();
+  usePresence(currentSession?._id)
 
-useEffect(() => {
-  if (!currentSession) return;
-
-  socket.emit("join-session", {
-    sessionId: currentSession._id,
-  });
-
-  socket.on(
-    "presence:update",
-    (userIds) => {
-      dispatch(
-        setOnlineUsers(userIds)
-      );
-    }
-  );
-
-  return () => {
-    socket.emit("leave-session", {
-      sessionId: currentSession._id,
-    });
-
-    socket.off("presence:update");
-  };
-}, [currentSession, dispatch]);
-
-useEffect(() => {
-  if (!currentSession) return;
-
-  socket.on(
-    "cursor-update",
-    (cursor) => {
-      dispatch(
-        setRemoteCursor(cursor)
-      );
-    }
-  );
-
-  return () => {
-    socket.off(
-      "cursor-update"
-    );
-  };
-}, [currentSession]);
   if (fetchLoading || !currentSession) {
     return (
       <div className="h-screen flex items-center justify-center">

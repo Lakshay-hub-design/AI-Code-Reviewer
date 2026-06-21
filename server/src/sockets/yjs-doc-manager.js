@@ -13,6 +13,12 @@ export const getOrCreateDoc = (sessionId) => {
   return docs.get(sessionId);
 };
 
+export const getDoc = (
+  sessionId
+) => {
+  return docs.get(sessionId);
+};
+
 export const removeDoc = (sessionId) => {
   const docData = docs.get(sessionId);
 

@@ -1,64 +1,14 @@
-import { Sparkles, Save, Wifi } from "lucide-react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import {
+  Sparkles,
+  Save,
+  Wifi,
+} from "lucide-react";
+
 import CodeEditor from "./CodeEditor";
-import debounce from "lodash.debounce";
-import { useDispatch } from "react-redux";
-import { updateSessionCode } from "../../session/sessionSlice";
-import { connectSocket } from "../../../shared/socket/socket";
 
-const EditorWorkspace = ({ session }) => {
-  const dispatch = useDispatch();
-  const socket = connectSocket();
-  const isRemoteUpdate = useRef(false);
-  const [code, setCode] = useState("");
-  useEffect(() => {
-    if (session?.code) {
-      setCode(session.code);
-    }
-  }, [session]);
-
-  useEffect(() => {
-    socket.on("code-change", ({ code }) => {
-      isRemoteUpdate.current = true;
-      setCode(code);
-    });
-
-    return () => {
-      socket.off("code-change");
-    };
-  }, []);
-
-  const saveCode = useMemo(
-    () =>
-      debounce((value) => {
-        dispatch(
-          updateSessionCode({
-            id: session._id,
-            code: value,
-          }),
-        );
-      }, 1000),
-    [dispatch, session._id],
-  );
-
-  const handleChange = (value) => {
-    const newCode = value || "";
-
-    setCode(newCode);
-
-    if (isRemoteUpdate.current) {
-      isRemoteUpdate.current = false;
-      return;
-    }
-
-    socket.emit("code-change", {
-      sessionId: session._id,
-      code: newCode,
-    });
-
-    saveCode(newCode);
-  };
-
+const EditorWorkspace = ({
+  session,
+}) => {
   return (
     <main
       className="
@@ -82,7 +32,6 @@ const EditorWorkspace = ({ session }) => {
           justify-between
         "
       >
-        {/* Left */}
         <div className="flex items-center gap-4">
           <span
             className="
@@ -95,10 +44,11 @@ const EditorWorkspace = ({ session }) => {
             {session?.language}
           </span>
 
-          <span className="text-xs text-zinc-500">Collaborative Session</span>
+          <span className="text-xs text-zinc-500">
+            Collaborative Session
+          </span>
         </div>
 
-        {/* Right */}
         <div className="flex items-center gap-2">
           <button
             className="
@@ -135,7 +85,7 @@ const EditorWorkspace = ({ session }) => {
         </div>
       </div>
 
-      {/* Editor Area */}
+      {/* Editor */}
       <div className="flex-1 relative">
         <div
           className="
@@ -146,7 +96,9 @@ const EditorWorkspace = ({ session }) => {
             justify-center
           "
         >
-          <CodeEditor session={session} code={code} onChange={handleChange} />
+          <CodeEditor
+            session={session}
+          />
         </div>
       </div>
 
@@ -165,9 +117,13 @@ const EditorWorkspace = ({ session }) => {
         "
       >
         <div className="flex items-center gap-4">
-          <span className="text-zinc-500">Ln 1, Col 1</span>
+          <span className="text-zinc-500">
+            Ln 1, Col 1
+          </span>
 
-          <span className="text-zinc-500">{session?.language}</span>
+          <span className="text-zinc-500">
+            {session?.language}
+          </span>
         </div>
 
         <div className="flex items-center gap-1 text-green-400">

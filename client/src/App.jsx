@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react'
+import { useEffect } from 'react'
 import AppRoutes from './app/routes/AppRoutes'
 import { useDispatch } from 'react-redux'
 import { fetchMe } from './features/auth/authSlice'
