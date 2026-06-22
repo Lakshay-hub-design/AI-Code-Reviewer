@@ -1,34 +1,59 @@
-import mongoose from 'mongoose';
+import mongoose from "mongoose";
 
 const reviewResultSchema = new mongoose.Schema(
   {
-    line:       { type: Number, default: 0 },
-    severity:   { type: String, enum: ['critical', 'warning', 'info'], default: 'info' },
-    message:    { type: String, required: true },
-    suggestion: { type: String, default: '' },
+    line: { type: Number, default: 0 },
+    severity: {
+      type: String,
+      enum: ["critical", "warning", "info"],
+      default: "info",
+    },
+    category: {
+      type: String,
+      enum: [
+        "security",
+        "performance",
+        "maintainability",
+        "bug",
+        "best-practice",
+      ],
+      default: "best-practice",
+    },
+    message: { type: String, required: true },
+    suggestion: { type: String, default: "" },
   },
-  { _id: false }
+  { _id: false },
 );
 
 const reviewSchema = new mongoose.Schema(
   {
     session: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'Session',
+      ref: "Session",
       required: true,
     },
+    score: {
+      type: Number,
+      min: 0,
+      max: 100,
+      default: 0,
+    },
+    summary: {
+      type: String,
+      default: "",
+    },
     // Snapshot of the code at review time
-    code:     { type: String, required: true },
+    code: { type: String, required: true },
     language: { type: String, required: true },
-    results:  [reviewResultSchema],
+    results: [reviewResultSchema],
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'User',
+      ref: "User",
       required: true,
     },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
-const Review = mongoose.model('Review', reviewSchema);
+const Review = mongoose.model("Review", reviewSchema);
 export default Review;
