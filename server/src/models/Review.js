@@ -46,6 +46,10 @@ const reviewSchema = new mongoose.Schema(
     code: { type: String, required: true },
     language: { type: String, required: true },
     results: [reviewResultSchema],
+    codeHash: {
+      type: String,
+      required: true,
+    },
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",

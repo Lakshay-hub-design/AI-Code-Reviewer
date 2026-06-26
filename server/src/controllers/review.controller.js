@@ -2,6 +2,7 @@ import Review from "../models/Review.js";
 import Session from "../models/Session.js";
 import generateAiReview from "../services/ai.service.js";
 import { getIo } from "../sockets/index.js";
+import { generateCodeHash } from "../utils/hash.utils.js";
 
 export const createReview = async (req, res) => {
   try {
@@ -13,6 +14,34 @@ export const createReview = async (req, res) => {
       return res.status(404).json({
         message: "Session not found",
       });
+    }
+
+    const codeHash = generateCodeHash(session.code);
+
+    const latestReview = await Review.findOne({
+      session: sessionId,
+      codeHash
+    }).sort({
+      createdAt: -1
+    })
+
+    if(latestReview){
+      const io = getIo()
+
+      io.to(`session:${sessionId}`).emit(
+        "review-created",
+        {
+          review: latestReview,
+          createdBy: req.user.username,
+          cached: true,
+        }
+      )
+
+      return res.status(200).json({
+        success: true,
+        cached: true,
+        review: latestReview
+      })
     }
 
     const aiReview = await generateAiReview({
@@ -27,6 +56,7 @@ export const createReview = async (req, res) => {
       score: aiReview.score,
       summary: aiReview.summary,
       results: aiReview.results,
+      codeHash,
       createdBy: req.user.id,
     });
 
@@ -45,6 +75,7 @@ export const createReview = async (req, res) => {
       review,
     });
   } catch (err) {
+    console.log(err)
     res.status(500).json({
       message: "Failed to generate ai review",
     });

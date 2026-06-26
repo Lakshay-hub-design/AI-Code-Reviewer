@@ -7,23 +7,59 @@ import { useDispatch, useSelector } from "react-redux";
 import { useEffect } from "react";
 import { fetchSession } from "../../session/sessionSlice";
 import { usePresence } from "../../../shared/socket/hooks/usePresence";
+import {
+  getLatestReview,
+  getReviewHistory,
+  setReview,
+} from "../../review/reviewSlice";
+import { useRef } from "react";
+import { EditorContext } from "../EditorContext";
+import { getSocket } from "../../../shared/socket/socket";
+import toast from "react-hot-toast"
 
 const EditorPage = () => {
   const { id } = useParams();
   const dispatch = useDispatch();
+  const editorRef = useRef(null);
 
   const { currentSession, fetchLoading } = useSelector(
-    (state) => state.session
+    (state) => state.session,
   );
 
   useEffect(() => {
     if (id) {
-        
       dispatch(fetchSession(id));
+      dispatch(getLatestReview(id));
+      dispatch(getReviewHistory(id));
     }
   }, [dispatch, id]);
 
-  usePresence(currentSession?._id)
+  useEffect(() => {
+    const socket = getSocket();
+
+    const handleReviewCreated = ({review, createdBy, cached}) => {
+      console.log(cached)
+      dispatch(setReview(review));
+
+      if (cached) {
+        toast.success(
+          `${createdBy} opened a cached review`
+        );
+      } else {
+        toast.success(
+          `${createdBy} generated a review`
+        );
+      }
+    };
+
+    socket.on("review-created", handleReviewCreated);
+
+    return () => {
+      socket.off("review-created", handleReviewCreated);
+    };
+  }, [dispatch]);
+
+  usePresence(currentSession?._id);
 
   if (fetchLoading || !currentSession) {
     return (
@@ -34,17 +70,19 @@ const EditorPage = () => {
   }
 
   return (
-    <div className="h-screen bg-[#09090B] text-white flex flex-col overflow-hidden">
-      <EditorHeader session={currentSession} />
+    <EditorContext.Provider value={editorRef}>
+      <div className="h-screen bg-[#09090B] text-white flex flex-col overflow-hidden">
+        <EditorHeader session={currentSession} />
 
-      <div className="flex flex-1 overflow-hidden">
-        <EditorSidebar session={currentSession} />
+        <div className="flex flex-1 overflow-hidden">
+          <EditorSidebar session={currentSession} />
 
-        <EditorWorkspace session={currentSession} />
+          <EditorWorkspace session={currentSession} />
 
-        <RightPanel session={currentSession} />
+          <RightPanel session={currentSession} />
+        </div>
       </div>
-    </div>
+    </EditorContext.Provider>
   );
 };
 

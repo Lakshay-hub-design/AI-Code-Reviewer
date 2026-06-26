@@ -1,9 +1,11 @@
 import Editor from "@monaco-editor/react";
-import { useRef, useState } from "react";
+import { useRef, useState, useContext } from "react";
 import { useSelector } from "react-redux";
 
 import { useYjsEditor } from "../../../shared/yjs/useYjsEditor";
 import { useCursorAwareness } from "../../../shared/awareness/useCursorAwareness";
+import { EditorContext } from "../EditorContext";
+import { useReviewMarkers } from "../hooks/useReviewMarkers";
 
 const languageMap = {
   javascript: "javascript",
@@ -17,42 +19,38 @@ const languageMap = {
   css: "css",
 };
 
-const CodeEditor = ({
-  session,
-}) => {
-  const currentUser =
-    useSelector(
-      (state) => state.auth.user
-    );
+const CodeEditor = ({ session }) => {
+  const currentUser = useSelector((state) => state.auth.user);
+  const review = useSelector(
+    (state) => state.review.review
+  )
+  
+  const [editor, setEditor] = useState(null);
 
-  const [editor, setEditor] =
-    useState(null);
-
-  const monacoRef =
-    useRef(null);
-
-  const handleMount = (
-    editor,
-    monaco
-  ) => {
+  const monacoRef = useRef(null);
+  const sharedEditorRef = useContext(EditorContext);
+  const handleMount = (editor, monaco) => {
+    sharedEditorRef.current = editor;
     setEditor(editor);
 
-    monacoRef.current =
-      monaco;
+    monacoRef.current = monaco;
   };
+  useReviewMarkers({
+    editor,
+    monaco:
+      monacoRef.current,
+    review,
+  });
 
   useYjsEditor({
     editor,
-    sessionId:
-      session._id,
+    sessionId: session._id,
   });
 
   useCursorAwareness({
     editor,
-    monaco:
-      monacoRef.current,
-    sessionId:
-      session._id,
+    monaco: monacoRef.current,
+    sessionId: session._id,
     currentUser,
   });
 
@@ -60,23 +58,15 @@ const CodeEditor = ({
     <Editor
       height="100%"
       theme="vs-dark"
-      language={
-        languageMap[
-          session?.language
-        ] ||
-        "javascript"
-      }
-      onMount={
-        handleMount
-      }
+      language={languageMap[session?.language] || "javascript"}
+      onMount={handleMount}
       options={{
         minimap: {
           enabled: false,
         },
         fontSize: 14,
         wordWrap: "on",
-        scrollBeyondLastLine:
-          false,
+        scrollBeyondLastLine: false,
         automaticLayout: true,
       }}
     />

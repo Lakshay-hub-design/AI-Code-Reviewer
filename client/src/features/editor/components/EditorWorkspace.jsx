@@ -5,10 +5,23 @@ import {
 } from "lucide-react";
 
 import CodeEditor from "./CodeEditor";
+import { useDispatch, useSelector } from "react-redux";
+import { generateReview } from "../../review/reviewSlice";
 
 const EditorWorkspace = ({
   session,
 }) => {
+  const dispatch = useDispatch();
+
+  const { isLoading } = useSelector(
+    (state) => state.review
+  )
+
+const handleReview = () => {
+  dispatch(
+    generateReview(session._id)
+  );
+};
   return (
     <main
       className="
@@ -67,6 +80,8 @@ const EditorWorkspace = ({
           </button>
 
           <button
+            onClick={handleReview}
+            disabled={isLoading}
             className="
               px-3
               py-1.5
@@ -80,7 +95,9 @@ const EditorWorkspace = ({
             "
           >
             <Sparkles size={14} />
-            Review AI
+            {isLoading
+              ? "Reviewing..."
+              : "Review AI"}
           </button>
         </div>
       </div>
