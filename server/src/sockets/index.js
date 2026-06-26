@@ -3,6 +3,7 @@ import { editorHandler } from "./editor.handler.js";
 import { verifyToken } from "../utils/jwt.utils.js";
 import { yjsHandler } from "./yjs.handler.js";
 import { awarenessHandler } from "./awareness.handler.js";
+import { chatHandler } from "./chat.handler.js";
 
 let io;
 
@@ -41,6 +42,7 @@ export const initSocket = (httpServer) => {
     yjsHandler(io, socket);
     editorHandler(io, socket);
     awarenessHandler(io, socket);
+    chatHandler(io, socket)
 
     socket.on("disconnect", (reason) => {
       console.log(`🔌 Socket disconnected: ${socket.id} — ${reason}`);

@@ -3,6 +3,7 @@ import authReducer from '../../features/auth/authSlice'
 import sessionReducer from '../../features/session/sessionSlice'
 import notificationReducer from '../../features/notifications/notificationSlice'
 import reviewReducer from '../../features/review/reviewSlice'
+import chatReducer from '../../features/chat/chatSlice'
 
 export const store = configureStore({
     reducer: {
@@ -10,5 +11,6 @@ export const store = configureStore({
         session: sessionReducer,
         notification: notificationReducer,
         review: reviewReducer,
+        chat: chatReducer,
     }
 })

@@ -1,18 +1,25 @@
-import { useState } from "react";
 import {
   Users,
   MessageSquare,
   History,
   PanelLeftClose,
   PanelLeftOpen,
+  SendHorizontal,
 } from "lucide-react";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
+import { useEffect, useState, useRef } from "react";
+import {
+  fetchMessages,
+  addMessage,
+  typingStopped,
+  typingStarted,
+} from "../../chat/chatSlice";
+import { getSocket } from "../../../shared/socket/socket";
 
 const EditorSidebar = ({ session }) => {
+  const currentUser = useSelector((state) => state.auth.user)
   const [collapsed, setCollapsed] = useState(false);
   const [activeTab, setActiveTab] = useState("members");
-
-  
 
   const tabs = [
     {
@@ -31,6 +38,72 @@ const EditorSidebar = ({ session }) => {
       icon: History,
     },
   ];
+
+  const dispatch = useDispatch();
+  const [message, setMessage] = useState("");
+  const typingRef = useRef(false);
+  const timeoutRef = useRef();
+
+  const { typingUsers } = useSelector(
+  state => state.chat
+);
+
+  useEffect(() => {
+    if (activeTab === "chat") {
+      dispatch(fetchMessages(session._id));
+    }
+  }, [activeTab, session._id, dispatch]);
+
+  useEffect(() => {
+    const socket = getSocket();
+
+    const handleMessage = (message) => {
+      dispatch(addMessage(message));
+    };
+
+    socket.on("chat-message", handleMessage);
+
+    socket.on("typing-start", ({ socketId, user }) => {
+      dispatch(
+        typingStarted({
+          socketId,
+          user,
+        }),
+      );
+    });
+
+    socket.on("typing-stop", ({ socketId }) => {
+      dispatch(
+        typingStopped({
+          socketId,
+        }),
+      );
+    });
+
+    return () => {
+      socket.off("chat-message", handleMessage);
+      socket.off("typing-start");
+      socket.off("typing-stop");
+    };
+  }, [dispatch]);
+
+  const sendMessage = () => {
+    if (!message.trim()) return;
+
+    getSocket().emit("chat-message", {
+      sessionId: session._id,
+      text: message.trim(),
+    });
+    typingRef.current = false;
+
+    clearTimeout(timeoutRef.current);
+
+    getSocket().emit("typing-stop", {
+      sessionId: session._id,
+    });
+
+    setMessage("");
+  };
 
   return (
     <aside
@@ -58,15 +131,11 @@ const EditorSidebar = ({ session }) => {
         "
       >
         {!collapsed && (
-          <h3 className="text-sm font-semibold text-white">
-            Session Tools
-          </h3>
+          <h3 className="text-sm font-semibold text-white">Session Tools</h3>
         )}
 
         <button
-          onClick={() =>
-            setCollapsed(!collapsed)
-          }
+          onClick={() => setCollapsed(!collapsed)}
           className="
             text-zinc-500
             hover:text-white
@@ -89,9 +158,7 @@ const EditorSidebar = ({ session }) => {
           return (
             <button
               key={tab.id}
-              onClick={() =>
-                setActiveTab(tab.id)
-              }
+              onClick={() => setActiveTab(tab.id)}
               className={`
                 w-full
                 flex
@@ -111,11 +178,7 @@ const EditorSidebar = ({ session }) => {
             >
               <Icon size={18} />
 
-              {!collapsed && (
-                <span className="text-sm">
-                  {tab.label}
-                </span>
-              )}
+              {!collapsed && <span className="text-sm">{tab.label}</span>}
             </button>
           );
         })}
@@ -124,44 +187,111 @@ const EditorSidebar = ({ session }) => {
       {!collapsed && (
         <>
           {/* Content */}
-          <div className="flex-1 overflow-y-auto px-3 pb-3">
-            {activeTab === "members" && (
-              <MembersPanel session={session} />
-            )}
+          <div className="flex-1 overflow-y-auto px-3 pb-3 custom-scrollbar">
+            {activeTab === "members" && <MembersPanel session={session} />}
 
-            {activeTab === "chat" && (
-              <ChatPanel />
-            )}
+            {activeTab === "chat" && <ChatPanel />}
 
-            {activeTab === "activity" && (
-              <ActivityPanel />
-            )}
+            {activeTab === "activity" && <ActivityPanel />}
           </div>
+
+          {typingUsers.length > 0 && (
+  <div className="px-2 pb-2">
+    <p className="text-xs text-zinc-500 italic">
+      {typingUsers
+        .map(u => u.user.username)
+        .join(", ")}{" "}
+      {typingUsers.length > 1
+        ? "are typing..."
+        : "is typing..."}
+    </p>
+  </div>
+)}
 
           {/* Chat Input */}
           {activeTab === "chat" && (
-            <div
-              className="
-                border-t
-                border-zinc-800
-                p-3
-              "
-            >
-              <input
-                placeholder="Type a message..."
+            <div className="border-t border-zinc-800 p-3 bg-[#111114]">
+              <div
                 className="
-                  w-full
-                  bg-zinc-900
-                  border
-                  border-zinc-800
-                  rounded-xl
-                  px-3
-                  py-2
-                  text-sm
-                  outline-none
-                  focus:border-violet-500
-                "
-              />
+        flex
+        items-end
+        gap-2
+        rounded-2xl
+        border
+        border-zinc-700
+        bg-zinc-900
+        p-2
+        focus-within:border-violet-500
+        transition-colors
+      "
+              >
+                <input
+                  value={message}
+                  onChange={(e) => {
+  setMessage(e.target.value);
+
+  if (!typingRef.current) {
+    typingRef.current = true;
+
+    getSocket().emit("typing-start", {
+      sessionId: session._id,
+      user: {
+        id: currentUser._id,
+        username: currentUser.username,
+      },
+    });
+  }
+
+  clearTimeout(timeoutRef.current);
+
+  timeoutRef.current = setTimeout(() => {
+    typingRef.current = false;
+
+    getSocket().emit("typing-stop", {
+      sessionId: session._id,
+    });
+  }, 1000);
+}}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && !e.shiftKey) {
+                      e.preventDefault();
+                      sendMessage();
+                    }
+                  }}
+                  placeholder="Type a message..."
+                  className="
+          flex-1
+          bg-transparent
+          px-2
+          py-2
+          text-sm
+          text-white
+          placeholder:text-zinc-500
+          outline-none
+        "
+                />
+
+                <button
+                  onClick={sendMessage}
+                  disabled={!message.trim()}
+                  className="
+          h-10
+          w-10
+          rounded-xl
+          bg-violet-600
+          hover:bg-violet-700
+          disabled:bg-zinc-800
+          disabled:text-zinc-600
+          disabled:cursor-not-allowed
+          flex
+          items-center
+          justify-center
+          transition-all
+        "
+                >
+                  <SendHorizontal size={18} />
+                </button>
+              </div>
             </div>
           )}
         </>
@@ -175,9 +305,7 @@ export default EditorSidebar;
 /* ---------------- Members ---------------- */
 
 const MembersPanel = ({ session }) => {
-  const onlineUsers = useSelector(
-    (state) => state.session.onlineUsers
-  );
+  const onlineUsers = useSelector((state) => state.session.onlineUsers);
 
   const owner = session?.owner;
 
@@ -185,14 +313,10 @@ const MembersPanel = ({ session }) => {
 
   const nonOwnerMembers =
     session?.members?.filter(
-      (member) =>
-        member._id.toString() !==
-        owner?._id?.toString()
+      (member) => member._id.toString() !== owner?._id?.toString(),
     ) || [];
 
-  const totalMembers =
-    (nonOwnerMembers?.length || 0) +
-    (owner ? 1 : 0);
+  const totalMembers = (nonOwnerMembers?.length || 0) + (owner ? 1 : 0);
 
   return (
     <div className="pt-3">
@@ -202,18 +326,13 @@ const MembersPanel = ({ session }) => {
         </h4>
 
         <p className="text-xs text-zinc-600 mt-1">
-          {onlineUsers.length} Online •{" "}
-          {totalMembers} Total
+          {onlineUsers.length} Online • {totalMembers} Total
         </p>
       </div>
 
       <div className="space-y-2">
         {owner && (
-          <MemberItem
-            user={owner}
-            owner
-            online={onlineSet.has(owner._id)}
-          />
+          <MemberItem user={owner} owner online={onlineSet.has(owner._id)} />
         )}
 
         {nonOwnerMembers.map((member) => (
@@ -228,11 +347,7 @@ const MembersPanel = ({ session }) => {
   );
 };
 
-const MemberItem = ({
-  user,
-  owner = false,
-  online = false,
-}) => {
+const MemberItem = ({ user, owner = false, online = false }) => {
   return (
     <div
       className="
@@ -246,11 +361,7 @@ const MemberItem = ({
     >
       <div className="flex items-center gap-3">
         <div className="relative">
-          <img
-            src={user.avatar}
-            alt=""
-            className="w-8 h-8 rounded-full"
-          />
+          <img src={user.avatar} alt="" className="w-8 h-8 rounded-full" />
 
           <span
             className={`
@@ -263,41 +374,26 @@ const MemberItem = ({
               border-2
               border-[#111114]
 
-              ${
-                online
-                  ? "bg-green-400"
-                  : "bg-zinc-600"
-              }
+              ${online ? "bg-green-400" : "bg-zinc-600"}
             `}
           />
         </div>
 
         <div>
           <p className="text-sm text-white">
-            {user.displayName ||
-              user.username}
+            {user.displayName || user.username}
           </p>
 
           <div className="flex items-center gap-2">
-            {owner && (
-              <span className="text-xs text-violet-400">
-                Owner
-              </span>
-            )}
+            {owner && <span className="text-xs text-violet-400">Owner</span>}
 
             <span
               className={`
                 text-xs
-                ${
-                  online
-                    ? "text-green-400"
-                    : "text-zinc-500"
-                }
+                ${online ? "text-green-400" : "text-zinc-500"}
               `}
             >
-              {online
-                ? "Online"
-                : "Offline"}
+              {online ? "Online" : "Offline"}
             </span>
           </div>
         </div>
@@ -309,11 +405,65 @@ const MemberItem = ({
 /* ---------------- Chat ---------------- */
 
 const ChatPanel = () => {
+  const { messages, loading } = useSelector((state) => state.chat);
+
+  const currentUser = useSelector((state) => state.auth.user);
+  
+
+  const bottomRef = useRef(null);
+
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({
+      behavior: "smooth",
+    });
+  }, [messages]);
+
+  if (loading) {
+    return <div className="pt-3 text-zinc-400">Loading...</div>;
+  }
+
+  if (!messages.length) {
+    return (
+      <div className="pt-3 text-zinc-500 text-center">No messages yet</div>
+    );
+  }
+
+  const MessageBubble = ({ message, own }) => {
+    return (
+      <div className={`flex ${own ? "justify-end" : "justify-start"}`}>
+        <div
+          className={`max-w-[85%] rounded-xl px-3 py-2 ${
+            own ? "bg-violet-600" : "bg-zinc-800"
+          }`}
+        >
+          {!own && (
+            <p className="text-xs text-violet-400 mb-1">
+              {message.sender.username}
+            </p>
+          )}
+
+          <p className="text-sm break-words">{message.text}</p>
+
+          <p className="text-[10px] text-zinc-400 mt-1">
+            {new Date(message.createdAt).toLocaleTimeString([], {
+              hour: "2-digit",
+              minute: "2-digit",
+            })}
+          </p>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="pt-3 space-y-3">
-      <div className="text-xs text-zinc-500 text-center">
-        No messages yet
-      </div>
+      {messages.map((message) => {
+        const own = message.sender._id === currentUser._id;
+
+        return <MessageBubble key={message._id} message={message} own={own} />;
+      })}
+
+      <div ref={bottomRef} />
     </div>
   );
 };
