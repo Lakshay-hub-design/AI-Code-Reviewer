@@ -4,6 +4,7 @@ import { verifyToken } from "../utils/jwt.utils.js";
 import { yjsHandler } from "./yjs.handler.js";
 import { awarenessHandler } from "./awareness.handler.js";
 import { chatHandler } from "./chat.handler.js";
+import User from "../models/User.js";
 
 let io;
 
@@ -15,7 +16,7 @@ export const initSocket = (httpServer) => {
     },
   });
 
-  io.use((socket, next) => {
+  io.use(async (socket, next) => {
     try {
       const token =
         socket.handshake.auth?.token ||
@@ -27,7 +28,11 @@ export const initSocket = (httpServer) => {
       if (!token) return next(new Error("Authentication required"));
 
       const decoded = verifyToken(token);
-      socket.userId = decoded.id;
+      const user = await User.findById(decoded.id)
+      .select("username displayName");
+      socket.userId = user._id;
+      socket.username = user.username;
+      socket.displayName = user.displayName;
       next();
     } catch {
       next(new Error("Invalid or expired token"));

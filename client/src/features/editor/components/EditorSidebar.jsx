@@ -5,6 +5,11 @@ import {
   PanelLeftClose,
   PanelLeftOpen,
   SendHorizontal,
+  Bot,
+  LogIn,
+  LogOut,
+  Save,
+  Clock3,
 } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
 import { useEffect, useState, useRef } from "react";
@@ -16,8 +21,45 @@ import {
 } from "../../chat/chatSlice";
 import { getSocket } from "../../../shared/socket/socket";
 
+import dayjs from "dayjs";
+import relativeTime from "dayjs/plugin/relativeTime";
+
+dayjs.extend(relativeTime);
+
+const activityIcons = {
+  join: {
+    icon: LogIn,
+    color: "text-green-400",
+    bg: "bg-green-500/10",
+  },
+
+  leave: {
+    icon: LogOut,
+    color: "text-red-400",
+    bg: "bg-red-500/10",
+  },
+
+  review: {
+    icon: Bot,
+    color: "text-violet-400",
+    bg: "bg-violet-500/10",
+  },
+
+  save: {
+    icon: Save,
+    color: "text-blue-400",
+    bg: "bg-blue-500/10",
+  },
+
+  DEFAULT: {
+    icon: Clock3,
+    color: "text-zinc-400",
+    bg: "bg-zinc-700/30",
+  },
+};
+
 const EditorSidebar = ({ session }) => {
-  const currentUser = useSelector((state) => state.auth.user)
+  const currentUser = useSelector((state) => state.auth.user);
   const [collapsed, setCollapsed] = useState(false);
   const [activeTab, setActiveTab] = useState("members");
 
@@ -44,9 +86,7 @@ const EditorSidebar = ({ session }) => {
   const typingRef = useRef(false);
   const timeoutRef = useRef();
 
-  const { typingUsers } = useSelector(
-  state => state.chat
-);
+  const { typingUsers } = useSelector((state) => state.chat);
 
   useEffect(() => {
     if (activeTab === "chat") {
@@ -196,17 +236,13 @@ const EditorSidebar = ({ session }) => {
           </div>
 
           {typingUsers.length > 0 && (
-  <div className="px-2 pb-2">
-    <p className="text-xs text-zinc-500 italic">
-      {typingUsers
-        .map(u => u.user.username)
-        .join(", ")}{" "}
-      {typingUsers.length > 1
-        ? "are typing..."
-        : "is typing..."}
-    </p>
-  </div>
-)}
+            <div className="px-2 pb-2">
+              <p className="text-xs text-zinc-500 italic">
+                {typingUsers.map((u) => u.user.username).join(", ")}{" "}
+                {typingUsers.length > 1 ? "are typing..." : "is typing..."}
+              </p>
+            </div>
+          )}
 
           {/* Chat Input */}
           {activeTab === "chat" && (
@@ -228,30 +264,30 @@ const EditorSidebar = ({ session }) => {
                 <input
                   value={message}
                   onChange={(e) => {
-  setMessage(e.target.value);
+                    setMessage(e.target.value);
 
-  if (!typingRef.current) {
-    typingRef.current = true;
+                    if (!typingRef.current) {
+                      typingRef.current = true;
 
-    getSocket().emit("typing-start", {
-      sessionId: session._id,
-      user: {
-        id: currentUser._id,
-        username: currentUser.username,
-      },
-    });
-  }
+                      getSocket().emit("typing-start", {
+                        sessionId: session._id,
+                        user: {
+                          id: currentUser._id,
+                          username: currentUser.username,
+                        },
+                      });
+                    }
 
-  clearTimeout(timeoutRef.current);
+                    clearTimeout(timeoutRef.current);
 
-  timeoutRef.current = setTimeout(() => {
-    typingRef.current = false;
+                    timeoutRef.current = setTimeout(() => {
+                      typingRef.current = false;
 
-    getSocket().emit("typing-stop", {
-      sessionId: session._id,
-    });
-  }, 1000);
-}}
+                      getSocket().emit("typing-stop", {
+                        sessionId: session._id,
+                      });
+                    }, 1000);
+                  }}
                   onKeyDown={(e) => {
                     if (e.key === "Enter" && !e.shiftKey) {
                       e.preventDefault();
@@ -408,7 +444,6 @@ const ChatPanel = () => {
   const { messages, loading } = useSelector((state) => state.chat);
 
   const currentUser = useSelector((state) => state.auth.user);
-  
 
   const bottomRef = useRef(null);
 
@@ -471,12 +506,11 @@ const ChatPanel = () => {
 /* ---------------- Activity ---------------- */
 
 const ActivityPanel = () => {
-  const activities = [
-    "John joined session",
-    "Code updated",
-    "AI review generated",
-    "Sarah left session",
-  ];
+  const { activities, isLoading } = useSelector((state) => state.activity);
+
+  if (isLoading) {
+    return <div className="text-zinc-500">Loading...</div>;
+  }
 
   return (
     <div className="pt-3">
@@ -485,20 +519,65 @@ const ActivityPanel = () => {
       </h4>
 
       <div className="space-y-3">
-        {activities.map((activity, idx) => (
-          <div
-            key={idx}
-            className="
-              text-sm
-              text-zinc-400
-              border-l
-              border-violet-500/30
-              pl-3
-            "
-          >
-            {activity}
-          </div>
+        {activities.map((activity) => (
+          <ActivityCard key={activity._id} activity={activity} />
         ))}
+      </div>
+    </div>
+  );
+};
+
+const ActivityCard = ({ activity }) => {
+  const config =
+    activityIcons[activity.type] ||
+    activityIcons.DEFAULT;
+
+  const Icon = config.icon;
+
+  return (
+    <div className="flex gap-3">
+      {/* Activity Icon */}
+      <div
+        className={`
+          h-10
+          w-10
+          rounded-full
+          flex
+          items-center
+          justify-center
+          flex-shrink-0
+          ${config.bg}
+        `}
+      >
+        <Icon
+          size={18}
+          className={config.color}
+        />
+      </div>
+
+      <div className="flex-1 min-w-0">
+        {/* User */}
+        <div className="flex items-center gap-2 mb-1">
+          <img
+            src={activity.user?.avatar}
+            alt={activity.username}
+            className="w-6 h-6 rounded-full"
+          />
+
+          <span className="text-sm font-medium text-white truncate">
+            {activity.user?.displayName || activity.username}
+          </span>
+        </div>
+
+        {/* Activity */}
+        <p className="text-sm text-zinc-300 leading-relaxed">
+          {activity.message}
+        </p>
+
+        {/* Time */}
+        <span className="text-xs text-zinc-500 mt-1 block">
+          {dayjs(activity.createdAt).fromNow()}
+        </span>
       </div>
     </div>
   );

@@ -16,6 +16,8 @@ import { useRef } from "react";
 import { EditorContext } from "../EditorContext";
 import { getSocket } from "../../../shared/socket/socket";
 import toast from "react-hot-toast"
+import { fetchActivities } from "../../activity/activitySlice";
+import { useActivitySocket } from "../../activity/useActivitySocket";
 
 const EditorPage = () => {
   const { id } = useParams();
@@ -31,6 +33,7 @@ const EditorPage = () => {
       dispatch(fetchSession(id));
       dispatch(getLatestReview(id));
       dispatch(getReviewHistory(id));
+      dispatch(fetchActivities(id));
     }
   }, [dispatch, id]);
 
@@ -60,6 +63,7 @@ const EditorPage = () => {
   }, [dispatch]);
 
   usePresence(currentSession?._id);
+  useActivitySocket();
 
   if (fetchLoading || !currentSession) {
     return (

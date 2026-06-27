@@ -11,6 +11,10 @@ const commentSchema = new mongoose.Schema(
       type: Number,
       required: true,
     },
+    column: {
+      type: Number,
+      default: 1
+    }
     text: {
       type: String,
       required: true,

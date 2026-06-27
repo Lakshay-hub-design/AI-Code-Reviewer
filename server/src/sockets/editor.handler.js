@@ -3,6 +3,7 @@ import * as Y from "yjs";
 import { getDoc, getOrCreateDoc } from "./yjs-doc-manager.js";
 import { removeDoc } from "./yjs-doc-manager.js";
 import { saveNow } from "./yjs-persistence.js";
+import { createActivity } from "../services/activity.service.js";
 
 export const editorHandler = (io, socket) => {
   socket.on("join-session", async ({ sessionId }) => {
@@ -38,6 +39,14 @@ export const editorHandler = (io, socket) => {
       const onlineUserIds = [...new Set(sockets.map((s) => s.userId))];
 
       io.to(roomId).emit("presence:update", onlineUserIds);
+
+      await createActivity({
+        session: sessionId,
+        user: socket.userId,
+        username: socket.displayName,
+        type: 'join',
+        message: 'joined the session'
+      })
     } catch (err) {
       socket.emit("error", {
         message: "Failed to join session",
@@ -54,17 +63,6 @@ export const editorHandler = (io, socket) => {
 
     socket.leave(roomId);
 
-    // const room = io.sockets.adapter.rooms.get(roomId);
-
-    // const docData = getDoc(sessionId);
-
-    // if (!room || room.size === 0) {
-    //   if (docData) {
-    //     await saveNow(sessionId, docData.ydoc);
-    //     removeDoc(sessionId);
-    //   }
-    // }
-
     const sockets = await io.in(roomId).fetchSockets();
 
     const onlineUserIds = [...new Set(sockets.map((s) => s.userId))];
@@ -74,6 +72,14 @@ export const editorHandler = (io, socket) => {
     socket.to(`session:${sessionId}`).emit("cursor-remove", {
       socketId: socket.id,
     });
+
+    await createActivity({
+        session: sessionId,
+        user: socket.userId,
+        username: socket.username,
+        type: 'leave',
+        message: 'leaved the session'
+      })
   });
 
   socket.on("disconnecting", async () => {
