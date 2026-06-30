@@ -18,6 +18,9 @@ import { getSocket } from "../../../shared/socket/socket";
 import toast from "react-hot-toast"
 import { fetchActivities } from "../../activity/activitySlice";
 import { useActivitySocket } from "../../activity/useActivitySocket";
+import { fetchComments } from "../../comments/commentSlice";
+import { clearComments } from "../../comments/commentSlice";
+
 
 const EditorPage = () => {
   const { id } = useParams();
@@ -30,12 +33,22 @@ const EditorPage = () => {
 
   useEffect(() => {
     if (id) {
+      dispatch(clearComments());
+      
       dispatch(fetchSession(id));
       dispatch(getLatestReview(id));
       dispatch(getReviewHistory(id));
       dispatch(fetchActivities(id));
+      dispatch(fetchComments(id));
     }
   }, [dispatch, id]);
+
+
+  useEffect(() => {
+    return () => {
+      dispatch(clearComments());
+    };
+  }, [dispatch]);
 
   useEffect(() => {
     const socket = getSocket();

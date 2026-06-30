@@ -4,6 +4,8 @@ import sessionReducer from '../../features/session/sessionSlice'
 import notificationReducer from '../../features/notifications/notificationSlice'
 import reviewReducer from '../../features/review/reviewSlice'
 import chatReducer from '../../features/chat/chatSlice'
+import activityReducer from '../../features/activity/activitySlice'
+import commentsReducer from '../../features/comments/commentSlice'
 
 export const store = configureStore({
     reducer: {
@@ -12,5 +14,7 @@ export const store = configureStore({
         notification: notificationReducer,
         review: reviewReducer,
         chat: chatReducer,
+        activity: activityReducer,
+        comments: commentsReducer
     }
 })

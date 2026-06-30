@@ -14,7 +14,7 @@ const commentSchema = new mongoose.Schema(
     column: {
       type: Number,
       default: 1
-    }
+    },
     text: {
       type: String,
       required: true,

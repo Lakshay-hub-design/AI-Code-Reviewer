@@ -1,4 +1,6 @@
 import Comment from "../models/Comment.js";
+import Session from "../models/Session.js";
+import { getIo } from "../sockets/index.js";
 
 export const createComment = async (req, res) => {
   try {
@@ -50,7 +52,7 @@ export const getComments = async (req, res) => {
       });
     }
 
-    const comments = Comment.find({
+    const comments = await Comment.find({
       session: sessionId,
     })
       .populate("author", "username displayName avatar")

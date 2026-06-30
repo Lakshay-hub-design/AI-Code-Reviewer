@@ -4,12 +4,12 @@ import { createComment, deleteComment, getComments, resolveComment } from "../co
 
 const router = Router();
 
-router.post("/sessions/:sessionId/comments", protect, createComment);
+router.post("/:sessionId", protect, createComment);
 
-router.get("/sessions/:sessionId/comments", protect, getComments);
+router.get("/:sessionId", protect, getComments);
 
-router.patch("/comments/:commentId/resolve", protect, resolveComment);
+router.patch("/:commentId/resolve", protect, resolveComment);
 
-router.delete("/comments/:commentId", protect, deleteComment);
+router.delete("/:commentId/delete", protect, deleteComment);
 
 export default router;

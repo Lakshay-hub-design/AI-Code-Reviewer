@@ -1,5 +1,6 @@
 import Review from "../models/Review.js";
 import Session from "../models/Session.js";
+import { createActivity } from "../services/activity.service.js";
 import generateAiReview from "../services/ai.service.js";
 import { getIo } from "../sockets/index.js";
 import { generateCodeHash } from "../utils/hash.utils.js";
@@ -69,6 +70,14 @@ export const createReview = async (req, res) => {
         createdBy: req.user.username,
       }
     );
+
+    await createActivity({
+        session: sessionId,
+        user: req.user.id,
+        username: req.user.displayName,
+        type: "review",
+        message: "generated an AI review",
+    });
 
     res.status(201).json({
       success: true,

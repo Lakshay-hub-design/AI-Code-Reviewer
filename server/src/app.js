@@ -13,6 +13,8 @@ import accessRequestRoutes from './routes/accessRequest.routes.js'
 import notificationRoutes from './routes/notification.routes.js'
 import reviewRoutes from './routes/review.routes.js'
 import messageRoutes from './routes/message.routes.js'
+import activityRoutes from './routes/activity.routes.js'
+import commentRoutes from './routes/comment.routes.js'
 
 import passport from 'passport';
 
@@ -36,6 +38,8 @@ app.use('/api/access-request', accessRequestRoutes)
 app.use('/api/notifications', notificationRoutes)
 app.use("/api/reviews", reviewRoutes);
 app.use('/api/messages', messageRoutes)
+app.use("/api/activity", activityRoutes);
+app.use('/api/comments', commentRoutes)
 
 
 app.get('/api/health', (req, res) => {

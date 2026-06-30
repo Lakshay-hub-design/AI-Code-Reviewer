@@ -48,3 +48,52 @@
 .custom-scrollbar:hover::-webkit-scrollbar-thumb:hover {
   background: #6366f1;
 }
+
+/* ---------- Add Comment ---------- */
+
+.comment-add-glyph {
+  width: 16px;
+  height: 16px;
+
+  background-image: url("/icons/plus.svg");
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 14px;
+  background-position: 4px center;
+
+
+  opacity: 0.75;
+  cursor: pointer;
+
+  transition: opacity 0.15s ease,
+              transform 0.15s ease;
+}
+
+.comment-add-glyph:hover {
+  opacity: 1;
+  transform: scale(1.08);
+}
+
+/* ---------- Existing Comment ---------- */
+
+.comment-glyph {
+  width: 17px;
+  height: 17px;
+
+  background-image: url("/icons/message.svg");
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 17px;
+  background-position: 4px center;
+
+  cursor: pointer;
+
+  opacity: 0.75;
+
+  transition: transform .15s ease;
+}
+
+.comment-glyph:hover {
+  transform: scale(1.08);
+  opacity: 1;
+}
